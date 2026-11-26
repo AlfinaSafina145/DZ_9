@@ -56,7 +56,7 @@ class BCipher : ICipher
     {
         return Replace(message);
     }
-
+    
     private string Replace(string message)
     {
         string result = "";
