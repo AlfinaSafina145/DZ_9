@@ -1,102 +1,244 @@
 ﻿using System;
-interface ICipher
+using System.Collections.Generic;
+interface IGame
 {
-    string Encode(string message);
-    string Decode(string message);
+    string GetName();
+    void Play(string teamName);
 }
-class ACipher : ICipher
+class Beach : IGame
 {
-    public string Encode(string message)
+    public string GetName()
     {
-        return Shift(message, 1);
-    }
-    public string Decode(string message)
-    {
-        return Shift(message, -1);
+        return "Пляж";
     }
 
-    private string Shift(string message, int offset)
+    public void Play(string teamName)
     {
-        string result = "";
-        foreach (char c in message)
+        Console.WriteLine("Команда " + teamName + " играет в игру «Пляж»");
+    }
+}
+class Mousetrap : IGame
+{
+    public string GetName()
+    {
+        return "Мышеловка";
+    }
+    public void Play(string teamName)
+    {
+        Console.WriteLine("Команда " + teamName + " играет в игру «Мышеловка»");
+    }
+}
+class Sea : IGame
+{
+    public string GetName()
+    {
+        return "Море";
+    }
+    public void Play(string teamName)
+    {
+        Console.WriteLine("Команда " + teamName + " играет в игру «Море»");
+    }
+}
+
+class Fishing : IGame
+{
+    public string GetName()
+    {
+        return "Рыбалка";
+    }
+    public void Play(string teamName)
+    {
+        Console.WriteLine("Команда " + teamName + " играет в игру «Рыбалка»");
+    }
+}
+
+class Postmen : IGame
+{
+    public string GetName()
+    {
+        return "Почтальоны";
+    }
+    public void Play(string teamName)
+    {
+        Console.WriteLine("Команда " + teamName + " играет в игру «Почтальоны»");
+    }
+}
+
+class Slide : IGame
+{
+    public string GetName()
+    {
+        return "Горка";
+    }
+
+    public void Play(string teamName)
+    {
+        Console.WriteLine("Команда " + teamName + " играет в игру «Горка»");
+    }
+}
+class GameWithExtra : IGame
+{
+    private IGame game;
+    private string extraName;
+
+    public GameWithExtra(IGame game, string extraName)
+    {
+        this.game = game;
+        this.extraName = extraName;
+    }
+
+    public string GetName()
+    {
+        return game.GetName() + " + " + extraName;
+    }
+
+    public void Play(string teamName)
+    {
+        game.Play(teamName);
+        Console.WriteLine("Команда " + teamName + " выполняет доп. этап: " + extraName);
+    }
+}
+class Organizer
+{
+    private static Organizer instance;
+    private string name;
+
+    private Organizer(string name)
+    {
+        this.name = name;
+    }
+
+    public static Organizer GetInstance(string name)
+    {
+        if (instance == null)
         {
-            if (c >= 'А' && c <= 'Я')
-            {
-                char shifted = (char)(c + offset);
-                if (shifted > 'Я') shifted = 'А';
-                if (shifted < 'А') shifted = 'Я';
-                result += shifted;
-            }
-            else if (c >= 'а' && c <= 'я')
-            {
-                char shifted = (char)(c + offset);
-                if (shifted > 'я') shifted = 'а';
-                if (shifted < 'а') shifted = 'я';
-                result += shifted;
-            }
-            else
-            {
-                result += c;
-            }
+            instance = new Organizer(name);
         }
-        return result;
+        return instance;
+    }
+
+    public string GetName()
+    {
+        return name;
+    }
+
+    public void AddGame(BigRaces races, IGame game)
+    {
+        races.AddGame(game);
     }
 }
-
-class BCipher : ICipher
+class Team
 {
-    private const int LettersCount = 32;
+    private string name;
+    private List<string> members;
 
-    public string Encode(string message)
+    public Team(string name)
     {
-        return Replace(message);
-    }
-
-    public string Decode(string message)
-    {
-        return Replace(message);
-    }
-
-    private string Replace(string message)
-    {
-        string result = "";
-        foreach (char c in message)
+        this.name = name;
+        members = new List<string>();
+        for (int i = 1; i <= 15; i++)
         {
-            if (c >= 'А' && c <= 'Я')
-            {
-                int index = c - 'А';
-                result += (char)('А' + (LettersCount - 1 - index));
-            }
-            else if (c >= 'а' && c <= 'я')
-            {
-                int index = c - 'а';
-                result += (char)('а' + (LettersCount - 1 - index));
-            }
-            else
-            {
-                result += c;
-            }
+            members.Add("Участник " + i);
         }
-        return result;
+    }
+
+    public string GetName()
+    {
+        return name;
+    }
+
+    public int GetMemberCount()
+    {
+        return members.Count;
     }
 }
+class BigRaces
+{
+    private List<IGame> games;
+    private Random random;
 
+    public BigRaces()
+    {
+        games = new List<IGame>();
+        random = new Random();
+    }
+
+    public void AddGame(IGame game)
+    {
+        if (game == null)
+        {
+            return;
+        }
+        games.Add(game);
+    }
+    public void ReplaceGame(int index, IGame game)
+    {
+        if (game == null)
+        {
+            return;
+        }
+        if (index >= 0 && index < games.Count)
+        {
+            games[index] = game;
+        }
+    }
+    private List<IGame> Shuffle()
+    {
+        List<IGame> shuffled = new List<IGame>(games);
+        for (int i = shuffled.Count - 1; i > 0; i--)
+        {
+            int j = random.Next(i + 1);
+            IGame tmp = shuffled[i];
+            shuffled[i] = shuffled[j];
+            shuffled[j] = tmp;
+        }
+        return shuffled;
+    }
+
+    public void Start(List<Team> teams)
+    {
+        Console.WriteLine("Главный организатор: " + Organizer.GetInstance("").GetName());
+        Console.WriteLine("=== НАЧАЛО СОРЕВНОВАНИЙ ===");
+        Console.WriteLine();
+
+        foreach (Team team in teams)
+        {
+            Console.WriteLine("Команда «" + team.GetName() + "», участников: " + team.GetMemberCount());
+
+            List<IGame> shuffled = Shuffle();
+            for (int i = 0; i < 6 && i < shuffled.Count; i++)
+            {
+                shuffled[i].Play(team.GetName());
+            }
+            Console.WriteLine();
+        }
+    }
+}
 class Program
 {
     static void Main()
     {
-        Console.Write("Введите строку: ");
-        string text = Console.ReadLine();
+        List<Team> teams = new List<Team>();
+        teams.Add(new Team("Россия"));
+        teams.Add(new Team("Франция"));
+        teams.Add(new Team("Китай"));
+        teams.Add(new Team("Казахстан"));
 
-        ICipher a = new ACipher();
-        ICipher b = new BCipher();
+        BigRaces races = new BigRaces();
 
-        string encodedA = a.Encode(text);
-        string decodedA = a.Decode(encodedA);
-        Console.WriteLine($"ACipher: \"{text}\" -> \"{encodedA}\" -> \"{decodedA}\"");
+        Organizer ganja = Organizer.GetInstance("Оливье Ганья");
 
-        string encodedB = b.Encode(text);
-        string decodedB = b.Decode(encodedB);
-        Console.WriteLine($"BCipher: \"{text}\" -> \"{encodedB}\" -> \"{decodedB}\"");
+        ganja.AddGame(races, new Beach());
+        ganja.AddGame(races, new Mousetrap());
+        ganja.AddGame(races, new Sea());
+        ganja.AddGame(races, new Fishing());
+        ganja.AddGame(races, new Postmen());
+        ganja.AddGame(races, new Slide());
+
+        ganja.AddGame(races, new GameWithExtra(new Beach(), "Бег в надувных кругах"));
+
+        races.Start(teams);
+
+        Console.ReadLine();
     }
 }
