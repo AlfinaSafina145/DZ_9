@@ -1,102 +1,157 @@
 ﻿using System;
-interface ICipher
+using System.Xml.Linq;
+interface IFigure
 {
-    string Encode(string message);
-    string Decode(string message);
+    void MoveHorizontal(double dx);
+    void MoveVertical(double dy);
+    void ChangeColor(string newColor);
+    bool IsVisible();
+    void Print();
 }
-class ACipher : ICipher
+abstract class Figure : IFigure
 {
-    public string Encode(string message)
+    protected string name;
+    protected string color;
+    protected bool visible;
+    protected double x;
+    protected double y;
+
+    public Figure(string name, double x, double y, string color)
     {
-        return Shift(message, 1);
+        this.name = name;
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.visible = true;
     }
-    public string Decode(string message)
+    public void MoveHorizontal(double dx)
     {
-        return Shift(message, -1);
+        x += dx;
+        Console.WriteLine($"Сдвиг по горизонтали на {dx}: теперь x = {x}");
     }
 
-    private string Shift(string message, int offset)
+    public void MoveVertical(double dy)
     {
-        string result = "";
-        foreach (char c in message)
+        y += dy;
+        Console.WriteLine($"Сдвиг по вертикали на {dy}: теперь y = {y}");
+    }
+
+    public void ChangeColor(string newColor)
+    {
+        color = newColor;
+        Console.WriteLine($"Цвет изменён на {color}");
+    }
+    public void Hide()
+    {
+        visible = false;
+        Console.WriteLine($"{name} скрыта");
+    }
+
+    public void Show()
+    {
+        visible = true;
+        Console.WriteLine($"{name} снова видима");
+    }
+
+
+    public bool IsVisible()
+    {
+        return visible;
+    }
+    public virtual void Print()
+    {
+        string state;
+        if (visible)
         {
-            if (c >= 'А' && c <= 'Я')
-            {
-                char shifted = (char)(c + offset);
-                if (shifted > 'Я') shifted = 'А';
-                if (shifted < 'А') shifted = 'Я';
-                result += shifted;
-            }
-            else if (c >= 'а' && c <= 'я')
-            {
-                char shifted = (char)(c + offset);
-                if (shifted > 'я') shifted = 'а';
-                if (shifted < 'а') shifted = 'я';
-                result += shifted;
-            }
-            else
-            {
-                result += c;
-            }
+            state = "видимый";
         }
-        return result;
-    }
-}
-
-class BCipher : ICipher
-{
-    private const int LettersCount = 32;
-
-    public string Encode(string message)
-    {
-        return Replace(message);
-    }
-
-    public string Decode(string message)
-    {
-        return Replace(message);
-    }
-
-    private string Replace(string message)
-    {
-        string result = "";
-        foreach (char c in message)
+        else
         {
-            if (c >= 'А' && c <= 'Я')
-            {
-                int index = c - 'А';
-                result += (char)('А' + (LettersCount - 1 - index));
-            }
-            else if (c >= 'а' && c <= 'я')
-            {
-                int index = c - 'а';
-                result += (char)('а' + (LettersCount - 1 - index));
-            }
-            else
-            {
-                result += c;
-            }
+            state = "невидимый";
         }
-        return result;
+        Console.WriteLine(name);
+        Console.WriteLine($"Цвет: {color}, Состояние: {state}, Позиция: ({x}, {y})");
+    }
+    public abstract double Area();
+
+}
+class Point : Figure
+{
+    public Point(string name,double x, double y, string color) : base(name, x, y, color) { }
+    public Point(double x, double y,string  color) : this("Точка", x, y, "черный") { }
+
+    public override double Area()
+    {
+        return 0;
     }
 }
+class Circle : Point
+{
+    private double radius;
 
+    public Circle(double x, double y, double radius, string color) : base("Окружность", x, y, color)
+    {
+        this.radius = radius;
+    }
+
+    public override void Print()
+    {
+        base.Print();
+        Console.WriteLine($"Радиус: {radius}, Площадь: {Math.Round(Area(), 2)}");
+    }
+
+    public override double Area()
+    {
+        return Math.PI * radius * radius;
+    }
+}
+class Rectangle : Point
+{
+    private double width;
+    private double height;
+
+    public Rectangle(double x, double y, double width, double height, string color)
+        : base("Прямоугльник",x, y, color)
+    {
+        this.width = width;
+        this.height = height;
+    }
+
+    public override void Print()
+    {
+        base.Print();
+        Console.WriteLine($"Ширина: {width}, Высота: {height}, Площадь: {Area()}");
+    }
+
+    public override double Area()
+    {
+        return width * height;
+    }
+}
 class Program
 {
     static void Main()
     {
-        Console.Write("Введите строку: ");
-        string text = Console.ReadLine();
+        Figure[] figures =
+        {
+            new Point(1, 2, "красный"),
+            new Circle(3, 4, 5, "синий"),
+            new Rectangle(0, 0, 10, 20, "зеленый")
+        };
 
-        ICipher a = new ACipher();
-        ICipher b = new BCipher();
+        foreach (Figure f in figures)
+        {
+            f.Print();
+            f.MoveHorizontal(2);
+            f.MoveVertical(3);
+            f.ChangeColor("желтый");
+            f.Hide();
+            Console.WriteLine($"Видима? {f.IsVisible()}");
+            f.Show();
+            Console.WriteLine($"Видима? {f.IsVisible()}");
+            f.Print();
 
-        string encodedA = a.Encode(text);
-        string decodedA = a.Decode(encodedA);
-        Console.WriteLine($"ACipher: \"{text}\" -> \"{encodedA}\" -> \"{decodedA}\"");
-
-        string encodedB = b.Encode(text);
-        string decodedB = b.Decode(encodedB);
-        Console.WriteLine($"BCipher: \"{text}\" -> \"{encodedB}\" -> \"{decodedB}\"");
+            Console.WriteLine();
+        }
     }
 }
